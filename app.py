@@ -1,7 +1,6 @@
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA3_256
 from Crypto.Util.Padding import pad, unpad
-from Crypto.Random import get_random_bytes
 
 
 BLOCK_SIZE = 16
@@ -24,7 +23,7 @@ def decrypt(ciphertext, key, iv):
     return unpad(cipher.decrypt(ciphertext), BLOCK_SIZE)
 
 
-def encrypt_file(input_file, output_file, key, iv):
+def encrypt_file(input_file, output_file, key, iv) -> None:
     with open(input_file, 'rb') as f:
         plaintext = f.read()
     ciphertext = encrypt(plaintext, key, iv)
@@ -32,7 +31,7 @@ def encrypt_file(input_file, output_file, key, iv):
         f.write(ciphertext)
 
 
-def decrypt_file(input_file, output_file, key, iv):
+def decrypt_file(input_file, output_file, key, iv) -> None:
     with open(input_file, 'rb') as f:
         ciphertext = f.read()
     plaintext = decrypt(ciphertext, key, iv)
