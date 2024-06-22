@@ -2,6 +2,8 @@ from Crypto.Cipher import AES
 from Crypto.Hash import SHA3_256
 from Crypto.Util.Padding import pad, unpad
 import secrets
+import argparse
+import getpass
 
 BLOCK_SIZE = 16
 
@@ -53,9 +55,41 @@ def decrypt_file(input_file: str, output_file: str, key: bytes) -> None:
         f.write(plaintext)
 
 
+def get_password() -> str:
+    return getpass.getpass(prompt='Password: ')
+
+
+def main():
+    parser = argparse.ArgumentParser(
+                    prog='ProgramName',
+                    description='What the program does',
+                    epilog='Text at the bottom of help')
+    parser.add_argument('-i', '--input_file', type=str, required=True,
+                        help="Path to the input file")
+    parser.add_argument('-o', '--output_file', type=str, required=True,
+                        help="Path to the output file")
+    parser.add_argument('-e', '--encrypt', action='store_true',
+                        help="Encrypt the input file to the output file")
+    parser.add_argument('-d', '--decrypt', action='store_true',
+                        help="Decrypt the input file to the output file")
+    parser.add_argument('-p', '--password', type=str,
+                        help="Password given as an argument. If not given, user will be asked in session.")
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help="Verbose mode")
+    args = parser.parse_args()
+
+    # Predicate
+    if (not args.encrypt and not args.decrypt) or\
+       (args.encrypt and args.decrypt):
+        parser.error("Encryption (-e) XOR decryption (-d) argument is required")
+    if not args.password:
+        args.password = get_password()
+    key = hash_password(args.password)
+    if args.encrypt:
+        encrypt_file(args.input_file, args.output_file, key)
+    if args.decrypt:
+        decrypt_file(args.input_file, args.output_file, key)
+
+
 if __name__ == '__main__':
-    key = hash_password('MySuperSecretPassword123!')
-    encrypt_file('files/example.txt', 'files/example.bin', key)
-    decrypt_file('files/example.bin', 'files/example2.txt', key)
-    decrypt_file('files/5cd994a7-c9a6-442a-a3b6-be1e2a9955ef',
-                 'files/example_decrypted.txt', key)
+    main()
