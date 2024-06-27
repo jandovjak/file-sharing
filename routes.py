@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.orm import Session
-from uuid import UUID
 from io import BytesIO
 from database import get_db
 from config import FILE_LOCATION
-from app import decrypt, encrypt, hash_password
+from app import decrypt, encrypt, Key
+from validator import is_valid_uuid
 
 import crud
 import schemas
@@ -14,28 +14,22 @@ import os
 router = APIRouter()
 
 
-def is_valid_uuid(uuid: str) -> bool:
-    try:
-        uuid_object = UUID(uuid)
-    except ValueError:
-        return False
-    return str(uuid_object) == uuid
-
-
 @router.post("/upload", response_model=schemas.File)
 async def upload_file(file: UploadFile = File(...),
                       password: str = Form(...),
+                      encrypt_file: bool = Form(...),
                       db: Session = Depends(get_db)):
     file_data = schemas.FileCreate(filename=file.filename,
                                    size=file.size)
     created_file = crud.create_file(db=db, file=file_data)
     file_location = f"{FILE_LOCATION}/{created_file.id}"
     file_content = await file.read()
-    key = hash_password(password)
-    encrypted = encrypt(file_content, key)
+    if encrypt_file is not None and encrypt_file:
+        key = Key(password)
+        file_content = encrypt(file_content, key.key)
     try:
         with open(file_location, "wb") as file_object:
-            file_object.write(encrypted)
+            file_object.write(file_content)
             return created_file
     except FileNotFoundError:
         raise HTTPException(status_code=404,
@@ -61,10 +55,10 @@ def read_file(id: str = Form(...),
     file_location = f"{FILE_LOCATION}/{file.id}"
     try:
         with open(file_location, "rb") as file_object:
-            key = hash_password(password)
             data = file_object.read()
             if decrypt_file is not None and decrypt_file:
-                data = decrypt(data, key)
+                key = Key(password)
+                data = decrypt(data, key.key)
             headers = {
                 'Content-Disposition': f"attachment; filename={file.filename}"
             }

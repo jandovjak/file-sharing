@@ -8,6 +8,36 @@ import getpass
 BLOCK_SIZE = 16
 
 
+class Key:
+    def __init__(self, password: str):
+        self.key = self.generate_key(password)
+        self.salt = self.generate_salt()
+        self.hashed_key = self.generate_hashed_key()
+
+    def generate_key(self, password: str) -> bytes:
+        hash_object = SHA3_256.new()
+        password_bytes = password.encode('utf-8')
+        hash_object.update(password_bytes)
+        return hash_object.digest()
+
+    def generate_hashed_key(self):
+        hash_object = SHA3_256.new()
+        hash_object.update(self.key + self.salt)
+        return hash_object.digest()
+
+    def generate_salt(self) -> bytes:
+        return secrets.token_bytes(32)
+
+    def get_key(self) -> bytes:
+        return self.key
+
+    def get_hashed_key(self) -> bytes:
+        return self.hashed_key
+
+    def get_salt(self) -> bytes:
+        return self.salt
+
+
 def generate_iv() -> bytes:
     return secrets.token_bytes(BLOCK_SIZE)
 
@@ -84,11 +114,11 @@ def main():
         parser.error("Encryption (-e) XOR decryption (-d) argument is required")
     if not args.password:
         args.password = get_password()
-    key = hash_password(args.password)
+    key = Key(args.password)
     if args.encrypt:
-        encrypt_file(args.input_file, args.output_file, key)
+        encrypt_file(args.input_file, args.output_file, key.key)
     if args.decrypt:
-        decrypt_file(args.input_file, args.output_file, key)
+        decrypt_file(args.input_file, args.output_file, key.key)
 
 
 if __name__ == '__main__':
