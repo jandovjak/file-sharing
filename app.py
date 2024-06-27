@@ -12,7 +12,7 @@ class Key:
     def __init__(self, password: str):
         self.key = self.generate_key(password)
         self.salt = self.generate_salt()
-        self.hashed_key = self.generate_hashed_key()
+        self.key_hash = self.generate_key_hash()
 
     def generate_key(self, password: str) -> bytes:
         hash_object = SHA3_256.new()
@@ -20,7 +20,7 @@ class Key:
         hash_object.update(password_bytes)
         return hash_object.digest()
 
-    def generate_hashed_key(self):
+    def generate_key_hash(self):
         hash_object = SHA3_256.new()
         hash_object.update(self.key + self.salt)
         return hash_object.digest()
@@ -31,8 +31,8 @@ class Key:
     def get_key(self) -> bytes:
         return self.key
 
-    def get_hashed_key(self) -> bytes:
-        return self.hashed_key
+    def get_key_hash(self) -> bytes:
+        return self.key_hash
 
     def get_salt(self) -> bytes:
         return self.salt
@@ -40,13 +40,6 @@ class Key:
 
 def generate_iv() -> bytes:
     return secrets.token_bytes(BLOCK_SIZE)
-
-
-def hash_password(password: str) -> bytes:
-    hash_object = SHA3_256.new()
-    password_bytes = bytearray(password.encode('utf-8'))
-    hash_object.update(password_bytes)
-    return bytes(hash_object.digest())
 
 
 def encrypt_with_iv(plaintext: bytes, key: bytes, iv: bytes) -> bytes:
