@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Integer
+from sqlalchemy import Column, String, DateTime, Integer, BLOB
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from database import Base
@@ -12,3 +12,5 @@ class File(Base):
     filename = Column(String, index=True, nullable=False)
     size = Column(Integer, nullable=False)
     uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
+    salt = Column(BLOB, nullable=False)
+    key_hash = Column(BLOB, nullable=False)

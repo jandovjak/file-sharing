@@ -7,6 +7,8 @@ from datetime import datetime
 class FileBase(BaseModel):
     filename: str
     size: int
+    salt: bytes
+    key_hash: bytes
 
 
 class FileCreate(FileBase):

@@ -19,8 +19,12 @@ async def upload_file(file: UploadFile = File(...),
                       password: str = Form(...),
                       encrypt_file: bool = Form(...),
                       db: Session = Depends(get_db)):
+    if encrypt_file is not None and encrypt_file:
+        key = Key(password)
     file_data = schemas.FileCreate(filename=file.filename,
-                                   size=file.size)
+                                   size=file.size,
+                                   salt=key.get_salt(),
+                                   key_hash=key.get_key_hash())
     created_file = crud.create_file(db=db, file=file_data)
     file_location = f"{FILE_LOCATION}/{created_file.id}"
     file_content = await file.read()
