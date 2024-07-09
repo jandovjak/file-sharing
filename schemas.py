@@ -23,3 +23,30 @@ class File(FileBase):
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+
+class UserBase(BaseModel):
+    username: str
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    disabled: Optional[str] = None
+
+
+class User(UserBase):
+    id: UUID
+    created_at: Optional[datetime] = None
+    hashed_password: str
+
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
